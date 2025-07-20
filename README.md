@@ -59,13 +59,4 @@ Because sometimes all you need is a quick, disposable space to jot something dow
 
 ---
 
-## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
-
-```
-
----
-
-Let me know if you're hosting this on GitHub, and I’ll personalize the repo link too!
-```
