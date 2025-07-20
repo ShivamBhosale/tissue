@@ -221,7 +221,7 @@ export const NoteEditor = ({
         <div className="container mx-auto max-w-4xl px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold">BytePad</h1>
+              <h1 className="text-xl font-bold">NapKit</h1>
               
               <Button variant="outline" size="sm" onClick={createNewNote}>
                 <Plus className="h-4 w-4 mr-1" />
