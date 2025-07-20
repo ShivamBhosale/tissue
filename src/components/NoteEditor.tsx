@@ -4,9 +4,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock } from 'lucide-react';
+import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3 } from 'lucide-react';
 interface NoteEditorProps {
   noteId?: string;
 }
@@ -32,6 +33,8 @@ export const NoteEditor = ({
   const [showLineNumbers, setShowLineNumbers] = useState(false);
   const [fontSize, setFontSize] = useState([16]);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isEditingUrl, setIsEditingUrl] = useState(false);
+  const [customUrl, setCustomUrl] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Generate random ID for new notes
@@ -186,6 +189,29 @@ export const NoteEditor = ({
     const newId = generateNoteId();
     navigate(`/${newId}`);
   };
+
+  const handleCustomUrl = () => {
+    if (isEditingUrl && customUrl.trim()) {
+      const cleanUrl = customUrl.trim().replace(/[^a-zA-Z0-9-_]/g, '');
+      if (cleanUrl) {
+        navigate(`/${cleanUrl}`);
+        setIsEditingUrl(false);
+        setCustomUrl('');
+      }
+    } else {
+      setIsEditingUrl(true);
+      setCustomUrl(noteId || '');
+    }
+  };
+
+  const handleUrlKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleCustomUrl();
+    } else if (e.key === 'Escape') {
+      setIsEditingUrl(false);
+      setCustomUrl('');
+    }
+  };
   const copyUrl = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -227,6 +253,28 @@ export const NoteEditor = ({
                 <Plus className="h-4 w-4 mr-1" />
                 New Note
               </Button>
+              
+              {/* Custom URL Editor */}
+              {isEditingUrl ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value)}
+                    onKeyDown={handleUrlKeyDown}
+                    placeholder="Enter custom URL"
+                    className="w-40 h-8"
+                    autoFocus
+                  />
+                  <Button variant="ghost" size="sm" onClick={handleCustomUrl}>
+                    Go
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="ghost" size="sm" onClick={handleCustomUrl}>
+                  <Edit3 className="h-4 w-4 mr-1" />
+                  Edit URL
+                </Button>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
