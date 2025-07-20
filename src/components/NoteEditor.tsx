@@ -360,11 +360,28 @@ export const NoteEditor = ({
         
         {/* Editor */}
         <div className="relative">
-          <Textarea ref={textareaRef} value={content} onChange={handleContentChange} onKeyDown={handleKeyDown} placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} className={`min-h-[calc(100vh-320px)] resize-none border shadow-sm focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''}`} style={{
-          fontSize: `${fontSize[0]}px`,
-          tabSize: 2,
-          lineHeight: isCodeMode ? '1.5' : '1.6'
-        }} />
+          {showLineNumbers && isCodeMode && (
+            <div className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none" style={{ fontSize: `${fontSize[0] * 0.8}px`, lineHeight: isCodeMode ? '1.5' : '1.6' }}>
+              {content.split('\n').map((_, index) => (
+                <div key={index} className="text-right w-8">
+                  {index + 1}
+                </div>
+              ))}
+            </div>
+          )}
+          <Textarea 
+            ref={textareaRef} 
+            value={content} 
+            onChange={handleContentChange} 
+            onKeyDown={handleKeyDown} 
+            placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
+            className={`min-h-[calc(100vh-320px)] resize-none border shadow-sm focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-12' : ''}`} 
+            style={{
+              fontSize: `${fontSize[0]}px`,
+              tabSize: 2,
+              lineHeight: isCodeMode ? '1.5' : '1.6'
+            }} 
+          />
         </div>
         
         {/* Footer */}
