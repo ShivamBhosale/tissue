@@ -38,6 +38,7 @@ export const NoteEditor = ({
   const [isEditingUrl, setIsEditingUrl] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
 
   // Generate random ID for new notes
   const generateNoteId = () => {
@@ -165,6 +166,14 @@ export const NoteEditor = ({
       textareaRef.current.focus();
     }
   }, [isLoading]);
+
+  // Sync line numbers scroll with textarea
+  const handleTextareaScroll = () => {
+    if (textareaRef.current && lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  };
+
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
   };
@@ -426,9 +435,13 @@ export const NoteEditor = ({
         </div>
         
         {/* Editor */}
-        <div className="relative overflow-hidden rounded-md border shadow-sm">
+        <div className="relative rounded-md border shadow-sm">
           {showLineNumbers && isCodeMode && (
-            <div className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none overflow-hidden" style={{ fontSize: `${fontSize[0] * 0.8}px`, lineHeight: isCodeMode ? '1.5' : '1.6' }}>
+            <div 
+              ref={lineNumbersRef}
+              className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none overflow-hidden h-[calc(100vh-320px)]" 
+              style={{ fontSize: `${fontSize[0] * 0.8}px`, lineHeight: isCodeMode ? '1.5' : '1.6' }}
+            >
               {content.split('\n').map((_, index) => (
                 <div key={index} className="text-right w-8">
                   {index + 1}
@@ -441,6 +454,7 @@ export const NoteEditor = ({
             value={content} 
             onChange={handleContentChange} 
             onKeyDown={handleKeyDown} 
+            onScroll={handleTextareaScroll}
             placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
             className={`min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-12' : ''}`} 
             style={{
