@@ -426,9 +426,9 @@ export const NoteEditor = ({
         </div>
         
         {/* Editor */}
-        <div className="relative">
+        <div className="relative overflow-hidden rounded-md border shadow-sm">
           {showLineNumbers && isCodeMode && (
-            <div className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none" style={{ fontSize: `${fontSize[0] * 0.8}px`, lineHeight: isCodeMode ? '1.5' : '1.6' }}>
+            <div className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none overflow-hidden" style={{ fontSize: `${fontSize[0] * 0.8}px`, lineHeight: isCodeMode ? '1.5' : '1.6' }}>
               {content.split('\n').map((_, index) => (
                 <div key={index} className="text-right w-8">
                   {index + 1}
@@ -442,7 +442,7 @@ export const NoteEditor = ({
             onChange={handleContentChange} 
             onKeyDown={handleKeyDown} 
             placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
-            className={`min-h-[calc(100vh-320px)] resize-none border shadow-sm focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-12' : ''}`} 
+            className={`min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-12' : ''}`} 
             style={{
               fontSize: `${fontSize[0]}px`,
               tabSize: 2,
