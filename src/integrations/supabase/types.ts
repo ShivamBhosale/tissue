@@ -96,7 +96,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      manual_create_note_version: {
+        Args: { note_id_param: string; content_param: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

@@ -253,6 +253,31 @@ export const NoteEditor = ({
       setCustomUrl('');
     }
   };
+
+  const saveVersion = async () => {
+    if (!noteId) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('manual_create_note_version', {
+        note_id_param: noteId,
+        content_param: content
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Version Saved!",
+        description: `Saved as version ${data}`,
+      });
+    } catch (error) {
+      console.error('Error saving version:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save version",
+        variant: "destructive",
+      });
+    }
+  };
   const copyUrl = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -401,6 +426,20 @@ export const NoteEditor = ({
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Copy URL */}
+              <Button variant="outline" size="sm" onClick={copyUrl}>
+                <Copy className="h-4 w-4 mr-1" />
+                Copy URL
+              </Button>
+
+              {/* Save Version */}
+              {noteId && (
+                <Button variant="outline" size="sm" onClick={saveVersion}>
+                  <Save className="h-4 w-4 mr-1" />
+                  Save
+                </Button>
+              )}
+
               {/* Version History */}
               {noteId && (
                 <VersionHistory 
@@ -409,12 +448,6 @@ export const NoteEditor = ({
                   onRestoreVersion={(restoredContent) => setContent(restoredContent)}
                 />
               )}
-
-              {/* Copy URL */}
-              <Button variant="outline" size="sm" onClick={copyUrl}>
-                <Copy className="h-4 w-4 mr-1" />
-                Copy URL
-              </Button>
             </div>
           </div>
         </div>
