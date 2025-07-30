@@ -7,7 +7,9 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3 } from 'lucide-react';
+import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import jsPDF from 'jspdf';
 interface NoteEditorProps {
   noteId?: string;
 }
@@ -236,6 +238,53 @@ export const NoteEditor = ({
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return date.toLocaleDateString();
   };
+
+  // Download functions
+  const downloadAsTxt = () => {
+    const element = document.createElement('a');
+    const file = new Blob([content], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `note-${noteId || 'untitled'}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    toast({
+      title: 'Downloaded!',
+      description: 'Note downloaded as TXT file'
+    });
+  };
+
+  const downloadAsPdf = () => {
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - margin * 2;
+    
+    // Set font
+    pdf.setFontSize(12);
+    
+    // Split content into lines that fit the page width
+    const lines = pdf.splitTextToSize(content || 'Empty note', maxWidth);
+    
+    let y = margin;
+    const lineHeight = 7;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (y + lineHeight > pageHeight - margin) {
+        pdf.addPage();
+        y = margin;
+      }
+      pdf.text(lines[i], margin, y);
+      y += lineHeight;
+    }
+    
+    pdf.save(`note-${noteId || 'untitled'}.pdf`);
+    toast({
+      title: 'Downloaded!',
+      description: 'Note downloaded as PDF file'
+    });
+  };
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading...</div>
@@ -295,6 +344,24 @@ export const NoteEditor = ({
                 {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
               
+              {/* Download Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1" />
+                    Download
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={downloadAsTxt}>
+                    Download as TXT
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={downloadAsPdf}>
+                    Download as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {/* Copy URL */}
               <Button variant="outline" size="sm" onClick={copyUrl}>
                 <Copy className="h-4 w-4 mr-1" />
