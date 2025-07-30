@@ -14,22 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      note_versions: {
+        Row: {
+          change_summary: string | null
+          content: string | null
+          content_hash: string | null
+          created_at: string | null
+          id: string
+          note_id: string
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          content?: string | null
+          content_hash?: string | null
+          created_at?: string | null
+          id?: string
+          note_id: string
+          version_number: number
+        }
+        Update: {
+          change_summary?: string | null
+          content?: string | null
+          content_hash?: string | null
+          created_at?: string | null
+          id?: string
+          note_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_versions_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           content: string | null
           created_at: string | null
+          current_version: number | null
           id: string
           updated_at: string | null
         }
         Insert: {
           content?: string | null
           created_at?: string | null
+          current_version?: number | null
           id: string
           updated_at?: string | null
         }
         Update: {
           content?: string | null
           created_at?: string | null
+          current_version?: number | null
           id?: string
           updated_at?: string | null
         }
