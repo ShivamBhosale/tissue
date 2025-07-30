@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download } from 'lucide-react';
+import { VersionHistory } from './VersionHistory';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import jsPDF from 'jspdf';
 interface NoteEditorProps {
@@ -95,24 +96,53 @@ export const NoteEditor = ({
         const {
           data,
           error
-        } = await supabase.from('notes').select('content').eq('id', noteId).maybeSingle();
+        } = await supabase.from('notes').select('content, current_version, updated_at').eq('id', noteId).maybeSingle();
         if (error && error.code !== 'PGRST116') {
           throw error;
         }
         if (data) {
           setContent(data.content || '');
-          setLastSaved(new Date());
+          setLastSaved(new Date(data.updated_at));
+          
+          // Create initial version if this note doesn't have any versions yet
+          if (!data.current_version) {
+            await supabase
+              .from('notes')
+              .update({ current_version: 1 })
+              .eq('id', noteId);
+              
+            await supabase
+              .from('note_versions')
+              .insert({ 
+                note_id: noteId, 
+                content: data.content || '', 
+                version_number: 1,
+                content_hash: 'd41d8cd98f00b204e9800998ecf8427e'
+              });
+          }
         } else {
           // Create new note
           const {
             error: insertError
           } = await supabase.from('notes').insert([{
             id: noteId,
-            content: ''
+            content: '',
+            current_version: 1
           }]);
           if (insertError) {
             throw insertError;
           }
+          
+          // Create initial version
+          await supabase
+            .from('note_versions')
+            .insert({ 
+              note_id: noteId, 
+              content: '', 
+              version_number: 1,
+              content_hash: 'd41d8cd98f00b204e9800998ecf8427e'
+            });
+            
           setContent('');
           setLastSaved(new Date());
         }
@@ -370,6 +400,15 @@ export const NoteEditor = ({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Version History */}
+              {noteId && (
+                <VersionHistory 
+                  noteId={noteId} 
+                  currentContent={content}
+                  onRestoreVersion={(restoredContent) => setContent(restoredContent)}
+                />
+              )}
 
               {/* Copy URL */}
               <Button variant="outline" size="sm" onClick={copyUrl}>
