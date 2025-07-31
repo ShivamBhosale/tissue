@@ -30,6 +30,7 @@ import 'prismjs/components/prism-java';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-markdown';
+
 interface NoteEditorProps {
   noteId?: string;
 }
@@ -236,13 +237,33 @@ export const NoteEditor = ({
         setFindReplaceOpen(true);
       } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        saveVersion();
+        // Call saveVersion directly without dependency issues
+        if (noteId && content) {
+          supabase.rpc('manual_create_note_version', {
+            note_id_param: noteId,
+            content_param: content
+          }).then(({ data, error }) => {
+            if (error) {
+              console.error('Error saving version:', error);
+              toast({
+                title: "Error",
+                description: "Failed to save version",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Version Saved!",
+                description: `Saved as version ${data}`,
+              });
+            }
+          });
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [noteId, content, toast]);
 
   // Syntax highlighting for code mode
   useEffect(() => {
