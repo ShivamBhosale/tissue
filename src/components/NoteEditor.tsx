@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download } from 'lucide-react';
+import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download, Bold, Italic, Underline } from 'lucide-react';
 import { VersionHistory } from './VersionHistory';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import jsPDF from 'jspdf';
@@ -226,6 +226,33 @@ export const NoteEditor = ({
       }, 0);
     }
   };
+
+  // Text formatting functions for text mode
+  const formatText = (prefix: string, suffix: string = '') => {
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    
+    const formattedText = prefix + selectedText + suffix;
+    const newContent = content.substring(0, start) + formattedText + content.substring(end);
+    
+    setContent(newContent);
+    
+    // Set cursor position after formatting
+    setTimeout(() => {
+      const newStart = start + prefix.length;
+      const newEnd = newStart + selectedText.length;
+      textarea.focus();
+      textarea.setSelectionRange(newStart, newEnd);
+    }, 0);
+  };
+
+  const makeBold = () => formatText('**', '**');
+  const makeItalic = () => formatText('*', '*');
+  const makeUnderline = () => formatText('<u>', '</u>');
   const createNewNote = () => {
     const newId = generateNoteId();
     navigate(`/${newId}`);
@@ -463,6 +490,21 @@ export const NoteEditor = ({
                 {isCodeMode ? <Code2 className="h-3 w-3 mr-1" /> : <Type className="h-3 w-3 mr-1" />}
                 {isCodeMode ? 'Code Mode' : 'Text Mode'}
               </Button>
+              
+              {/* Text Formatting (only in text mode) */}
+              {!isCodeMode && (
+                <>
+                  <Button variant="outline" size="sm" onClick={makeBold} title="Bold">
+                    <Bold className="h-3 w-3" />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={makeItalic} title="Italic">
+                    <Italic className="h-3 w-3" />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={makeUnderline} title="Underline">
+                    <Underline className="h-3 w-3" />
+                  </Button>
+                </>
+              )}
               
               {/* Language Selection */}
               {isCodeMode && <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
