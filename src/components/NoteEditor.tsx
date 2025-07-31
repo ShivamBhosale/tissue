@@ -7,10 +7,24 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download } from 'lucide-react';
+import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download, Search, Command, Folder } from 'lucide-react';
 import { VersionHistory } from './VersionHistory';
+import { FindReplace } from './FindReplace';
+import { CommandPalette } from './CommandPalette';
+import { CollectionManager } from './CollectionManager';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import jsPDF from 'jspdf';
+import Prism from 'prismjs';
+
+// Import common language syntax highlighting
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-markdown';
+import 'prismjs/themes/prism.css';
 interface NoteEditorProps {
   noteId?: string;
 }
@@ -38,8 +52,15 @@ export const NoteEditor = ({
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isEditingUrl, setIsEditingUrl] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
+  const [findReplaceOpen, setFindReplaceOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [collectionManagerOpen, setCollectionManagerOpen] = useState(false);
+  const [currentCollection, setCurrentCollection] = useState<string | undefined>();
+  const [currentTags, setCurrentTags] = useState<string[]>([]);
+  const [syntaxHighlightedContent, setSyntaxHighlightedContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
 
   // Generate random ID for new notes
   const generateNoteId = () => {
@@ -80,7 +101,7 @@ export const NoteEditor = ({
     localStorage.setItem('notepad-line-numbers', showLineNumbers.toString());
   }, [showLineNumbers]);
 
-  // Load note content
+  // Load note content and metadata
   useEffect(() => {
     const loadNote = async () => {
       if (!noteId) {
@@ -96,13 +117,15 @@ export const NoteEditor = ({
         const {
           data,
           error
-        } = await supabase.from('notes').select('content, current_version, updated_at').eq('id', noteId).maybeSingle();
+        } = await supabase.from('notes').select('content, current_version, updated_at, collection, tags').eq('id', noteId).maybeSingle();
         if (error && error.code !== 'PGRST116') {
           throw error;
         }
         if (data) {
           setContent(data.content || '');
           setLastSaved(new Date(data.updated_at));
+          setCurrentCollection(data.collection);
+          setCurrentTags(data.tags || []);
           
           // Create initial version if this note doesn't have any versions yet
           if (!data.current_version) {
@@ -196,6 +219,38 @@ export const NoteEditor = ({
       textareaRef.current.focus();
     }
   }, [isLoading]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setFindReplaceOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveVersion();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Syntax highlighting for code mode
+  useEffect(() => {
+    if (isCodeMode && selectedLanguage !== 'plaintext' && content) {
+      try {
+        const highlighted = Prism.highlight(content, Prism.languages[selectedLanguage] || Prism.languages.plain, selectedLanguage);
+        setSyntaxHighlightedContent(highlighted);
+      } catch (error) {
+        console.error('Syntax highlighting error:', error);
+        setSyntaxHighlightedContent(content);
+      }
+    }
+  }, [content, selectedLanguage, isCodeMode]);
 
   // Sync line numbers scroll with textarea
   const handleTextareaScroll = () => {
@@ -486,6 +541,26 @@ export const NoteEditor = ({
             </div>
             
             <div className="flex items-center gap-4">
+              {/* Find & Replace */}
+              <Button variant="outline" size="sm" onClick={() => setFindReplaceOpen(true)}>
+                <Search className="h-3 w-3 mr-1" />
+                Find
+              </Button>
+
+              {/* Command Palette */}
+              <Button variant="outline" size="sm" onClick={() => setCommandPaletteOpen(true)}>
+                <Command className="h-3 w-3 mr-1" />
+                Commands
+              </Button>
+
+              {/* Collection Manager */}
+              {noteId && (
+                <Button variant="outline" size="sm" onClick={() => setCollectionManagerOpen(true)}>
+                  <Folder className="h-3 w-3 mr-1" />
+                  Organize
+                </Button>
+              )}
+
               {/* Font Size */}
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setFontSize([Math.max(12, fontSize[0] - 2)])} disabled={fontSize[0] <= 12}>
@@ -561,5 +636,41 @@ export const NoteEditor = ({
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <FindReplace
+        open={findReplaceOpen}
+        onOpenChange={setFindReplaceOpen}
+        content={content}
+        onContentChange={setContent}
+        textareaRef={textareaRef}
+      />
+
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        onNewNote={createNewNote}
+        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        onToggleCodeMode={() => setIsCodeMode(!isCodeMode)}
+        onOpenFindReplace={() => setFindReplaceOpen(true)}
+        onCopyUrl={copyUrl}
+        onSaveVersion={saveVersion}
+        onDownloadTxt={downloadAsTxt}
+        onDownloadPdf={downloadAsPdf}
+        isCodeMode={isCodeMode}
+        currentNoteId={noteId}
+      />
+
+      {noteId && (
+        <CollectionManager
+          open={collectionManagerOpen}
+          onOpenChange={setCollectionManagerOpen}
+          noteId={noteId}
+          currentCollection={currentCollection}
+          currentTags={currentTags}
+          onCollectionChange={setCurrentCollection}
+          onTagsChange={setCurrentTags}
+        />
+      )}
     </div>;
 };
