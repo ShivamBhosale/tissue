@@ -14,9 +14,15 @@ import { CommandPalette } from './CommandPalette';
 import { CollectionManager } from './CollectionManager';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import jsPDF from 'jspdf';
-import Prism from 'prismjs';
 
-// Import common language syntax highlighting
+// Import Prism.js for syntax highlighting
+import Prism from 'prismjs';
+import 'prismjs/themes/prism.css';
+
+// Ensure Prism is available globally for language components
+(window as any).Prism = Prism;
+
+// Now import language components
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-python';
@@ -24,7 +30,6 @@ import 'prismjs/components/prism-java';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-markdown';
-import 'prismjs/themes/prism.css';
 interface NoteEditorProps {
   noteId?: string;
 }
