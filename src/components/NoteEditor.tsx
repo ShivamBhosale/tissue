@@ -7,12 +7,15 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download, Search, Command } from 'lucide-react';
+import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download, Search, Command, Lock, Eye, Palette } from 'lucide-react';
 import { VersionHistory } from './VersionHistory';
 import { FindReplace } from './FindReplace';
 import { CommandPalette } from './CommandPalette';
+import { PasswordProtection } from './PasswordProtection';
+import { RichTextEditor } from './RichTextEditor';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import jsPDF from 'jspdf';
+import bcrypt from 'bcryptjs';
 
 // Import Prism.js for syntax highlighting
 import Prism from 'prismjs';
@@ -49,6 +52,7 @@ export const NoteEditor = ({
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCodeMode, setIsCodeMode] = useState(false);
+  const [isWysiwygMode, setIsWysiwygMode] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('plaintext');
@@ -59,6 +63,10 @@ export const NoteEditor = ({
   const [customUrl, setCustomUrl] = useState('');
   const [findReplaceOpen, setFindReplaceOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordMode, setPasswordMode] = useState<'set' | 'verify'>('set');
+  const [isPasswordProtected, setIsPasswordProtected] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [syntaxHighlightedContent, setSyntaxHighlightedContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
@@ -119,13 +127,23 @@ export const NoteEditor = ({
         const {
           data,
           error
-        } = await supabase.from('notes').select('content, current_version, updated_at').eq('id', noteId).maybeSingle();
+        } = await supabase.from('notes').select('content, current_version, updated_at, password_hash, is_encrypted').eq('id', noteId).maybeSingle();
         if (error && error.code !== 'PGRST116') {
           throw error;
         }
         if (data) {
+          // Check if note is password protected
+          if (data.password_hash) {
+            setIsPasswordProtected(true);
+            setPasswordMode('verify');
+            setPasswordDialogOpen(true);
+            return; // Don't load content until password is verified
+          }
+          
           setContent(data.content || '');
           setLastSaved(new Date(data.updated_at));
+          setIsPasswordProtected(!!data.password_hash);
+          setIsUnlocked(!data.password_hash);
           
           // Create initial version if this note doesn't have any versions yet
           if (!data.current_version) {
@@ -425,9 +443,130 @@ export const NoteEditor = ({
       description: 'Note downloaded as PDF file'
     });
   };
+
+  // Password protection functions
+  const handlePasswordSet = async (hashedPassword: string) => {
+    if (!noteId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ password_hash: hashedPassword, is_encrypted: true })
+        .eq('id', noteId);
+        
+      if (error) throw error;
+      
+      setIsPasswordProtected(true);
+      setIsUnlocked(true);
+    } catch (error) {
+      console.error('Error setting password:', error);
+      toast({
+        title: "Error",
+        description: "Failed to set password protection",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePasswordVerified = async (password: string) => {
+    if (!noteId) return;
+    
+    try {
+      // Get the stored password hash
+      const { data, error } = await supabase
+        .from('notes')
+        .select('password_hash, content, updated_at')
+        .eq('id', noteId)
+        .single();
+        
+      if (error) throw error;
+      
+      // Verify password
+      const isValid = await bcrypt.compare(password, data.password_hash);
+      
+      if (isValid) {
+        setIsUnlocked(true);
+        setContent(data.content || '');
+        setLastSaved(new Date(data.updated_at));
+        toast({
+          title: "Access Granted",
+          description: "Note unlocked successfully",
+        });
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "Incorrect password",
+          variant: "destructive",
+        });
+        setPasswordDialogOpen(true); // Keep dialog open
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      toast({
+        title: "Error",
+        description: "Failed to verify password",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const togglePasswordProtection = () => {
+    if (isPasswordProtected) {
+      // Remove password protection
+      supabase
+        .from('notes')
+        .update({ password_hash: null, is_encrypted: false })
+        .eq('id', noteId)
+        .then(({ error }) => {
+          if (error) {
+            toast({
+              title: "Error",
+              description: "Failed to remove password protection",
+              variant: "destructive",
+            });
+          } else {
+            setIsPasswordProtected(false);
+            setIsUnlocked(true);
+            toast({
+              title: "Password Removed",
+              description: "Note is no longer password protected",
+            });
+          }
+        });
+    } else {
+      setPasswordMode('set');
+      setPasswordDialogOpen(true);
+    }
+  };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading...</div>
+      </div>;
+  }
+
+  // Show password dialog if note is protected and not unlocked
+  if (isPasswordProtected && !isUnlocked) {
+    return <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+          <div>
+            <h2 className="text-lg font-semibold">Protected Note</h2>
+            <p className="text-sm text-muted-foreground">This note is password protected</p>
+          </div>
+          <Button onClick={() => setPasswordDialogOpen(true)}>
+            <Lock className="h-4 w-4 mr-2" />
+            Enter Password
+          </Button>
+        </div>
+        
+        <PasswordProtection
+          isOpen={passwordDialogOpen}
+          onClose={() => setPasswordDialogOpen(false)}
+          onPasswordVerified={handlePasswordVerified}
+          mode="verify"
+          title="Enter Note Password"
+        />
       </div>;
   }
   return <div className="min-h-screen bg-background">
@@ -534,11 +673,21 @@ export const NoteEditor = ({
         <div className="mb-4 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4 flex-wrap">
-              {/* Mode Toggle */}
-              <Button variant={isCodeMode ? "default" : "outline"} size="sm" onClick={() => setIsCodeMode(!isCodeMode)}>
+              {/* Mode Toggles */}
+              <Button variant={isCodeMode ? "default" : "outline"} size="sm" onClick={() => {
+                setIsCodeMode(!isCodeMode);
+                if (!isCodeMode) setIsWysiwygMode(false);
+              }}>
                 {isCodeMode ? <Code2 className="h-3 w-3 mr-1" /> : <Type className="h-3 w-3 mr-1" />}
                 {isCodeMode ? 'Code Mode' : 'Text Mode'}
               </Button>
+              
+              {!isCodeMode && (
+                <Button variant={isWysiwygMode ? "default" : "outline"} size="sm" onClick={() => setIsWysiwygMode(!isWysiwygMode)}>
+                  <Palette className="h-3 w-3 mr-1" />
+                  {isWysiwygMode ? 'Rich Text' : 'Plain Text'}
+                </Button>
+              )}
               
               
               {/* Language Selection */}
@@ -572,6 +721,18 @@ export const NoteEditor = ({
                 <Command className="h-3 w-3 mr-1" />
                 Commands
               </Button>
+
+              {/* Password Protection */}
+              {noteId && (
+                <Button 
+                  variant={isPasswordProtected ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={togglePasswordProtection}
+                >
+                  <Lock className="h-3 w-3 mr-1" />
+                  {isPasswordProtected ? 'Protected' : 'Protect'}
+                </Button>
+              )}
 
               {/* Font Size */}
               <div className="flex items-center gap-2">
@@ -610,20 +771,29 @@ export const NoteEditor = ({
               ))}
             </div>
           )}
-          <Textarea 
-            ref={textareaRef} 
-            value={content} 
-            onChange={handleContentChange} 
-            onKeyDown={handleKeyDown} 
-            onScroll={handleTextareaScroll}
-            placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
-            className={`min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-12' : ''}`} 
-            style={{
-              fontSize: `${fontSize[0]}px`,
-              tabSize: 2,
-              lineHeight: isCodeMode ? '1.5' : '1.6'
-            }} 
-          />
+          {!isCodeMode && isWysiwygMode ? (
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              fontSize={fontSize[0]}
+              placeholder="Start typing your note..."
+            />
+          ) : (
+            <Textarea 
+              ref={textareaRef} 
+              value={content} 
+              onChange={handleContentChange} 
+              onKeyDown={handleKeyDown} 
+              onScroll={handleTextareaScroll}
+              placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
+              className={`min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-12' : ''}`} 
+              style={{
+                fontSize: `${fontSize[0]}px`,
+                tabSize: 2,
+                lineHeight: isCodeMode ? '1.5' : '1.6'
+              }} 
+            />
+          )}
         </div>
         
         {/* Footer */}
@@ -671,6 +841,15 @@ export const NoteEditor = ({
         onDownloadPdf={downloadAsPdf}
         isCodeMode={isCodeMode}
         currentNoteId={noteId}
+      />
+
+      {/* Password Protection Dialog */}
+      <PasswordProtection
+        isOpen={passwordDialogOpen}
+        onClose={() => setPasswordDialogOpen(false)}
+        onPasswordSet={handlePasswordSet}
+        onPasswordVerified={handlePasswordVerified}
+        mode={passwordMode}
       />
     </div>;
 };
