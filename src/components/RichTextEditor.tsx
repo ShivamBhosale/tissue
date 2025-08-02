@@ -60,6 +60,7 @@ export const RichTextEditor = ({
           border-right: 1px solid hsl(var(--border));
           border-bottom: none;
           background: hsl(var(--background));
+          flex-wrap: wrap;
         }
         
         .ql-container {
@@ -69,9 +70,17 @@ export const RichTextEditor = ({
         }
         
         .ql-editor {
-          min-height: calc(100vh - 320px);
+          min-height: calc(100vh - 280px);
           color: hsl(var(--foreground));
           background: hsl(var(--background));
+          padding: 12px;
+        }
+        
+        @media (min-width: 640px) {
+          .ql-editor {
+            min-height: calc(100vh - 320px);
+            padding: 12px;
+          }
         }
         
         .ql-editor.ql-blank::before {
@@ -94,6 +103,7 @@ export const RichTextEditor = ({
         .ql-snow .ql-picker-options {
           background: hsl(var(--background));
           border: 1px solid hsl(var(--border));
+          z-index: 1000;
         }
         
         .ql-snow .ql-picker-item:hover {
@@ -104,6 +114,7 @@ export const RichTextEditor = ({
           background: hsl(var(--background));
           border: 1px solid hsl(var(--border));
           color: hsl(var(--foreground));
+          z-index: 1000;
         }
         
         .ql-snow .ql-tooltip input {
@@ -116,6 +127,49 @@ export const RichTextEditor = ({
         
         .dark .ql-snow .ql-fill {
           fill: hsl(var(--foreground));
+        }
+        
+        /* Mobile-friendly toolbar */
+        @media (max-width: 639px) {
+          .ql-toolbar {
+            padding: 8px 4px;
+          }
+          
+          .ql-toolbar .ql-formats {
+            margin-right: 8px;
+          }
+          
+          .ql-toolbar .ql-picker.ql-size,
+          .ql-toolbar .ql-picker.ql-header {
+            width: auto;
+          }
+          
+          .ql-toolbar button {
+            width: 28px;
+            height: 28px;
+            padding: 3px;
+            margin: 1px;
+          }
+          
+          .ql-toolbar button svg {
+            width: 14px;
+            height: 14px;
+          }
+          
+          .ql-editor {
+            font-size: 16px !important; /* Prevent zoom on iOS */
+            padding: 16px 12px;
+          }
+        }
+        
+        /* Touch-friendly controls */
+        .ql-toolbar button:hover {
+          background: hsl(var(--accent));
+        }
+        
+        .ql-toolbar button.ql-active {
+          background: hsl(var(--primary));
+          color: hsl(var(--primary-foreground));
         }
       `}</style>
       

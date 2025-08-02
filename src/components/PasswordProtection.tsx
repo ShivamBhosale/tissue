@@ -89,10 +89,10 @@ export const PasswordProtection = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md mx-4 w-[calc(100vw-2rem)] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Lock className="h-4 w-4 sm:h-5 sm:w-5" />
             {title || (mode === 'set' ? 'Set Password Protection' : 'Enter Password')}
           </DialogTitle>
         </DialogHeader>
@@ -107,7 +107,8 @@ export const PasswordProtection = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === 'set' ? 'Enter a strong password' : 'Enter note password'}
-                className="pr-10"
+                className="pr-12 text-base sm:text-sm"
+                style={{ fontSize: '16px' }} // Prevent zoom on iOS
                 required
               />
               <Button
@@ -135,16 +136,18 @@ export const PasswordProtection = ({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
+                className="text-base sm:text-sm"
+                style={{ fontSize: '16px' }} // Prevent zoom on iOS
                 required
               />
             </div>
           )}
 
-          <div className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1 order-2 sm:order-1">
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="flex-1">
+            <Button type="submit" disabled={isLoading} className="flex-1 order-1 sm:order-2">
               {isLoading ? 'Processing...' : (mode === 'set' ? 'Set Password' : 'Unlock')}
             </Button>
           </div>

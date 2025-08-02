@@ -571,67 +571,78 @@ export const NoteEditor = ({
   }
   return <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto max-w-4xl px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold">Tissue</h1>
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container mx-auto max-w-4xl px-3 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold shrink-0">Tissue</h1>
               
-              <Button variant="outline" size="sm" onClick={createNewNote}>
+              <Button variant="outline" size="sm" onClick={createNewNote} className="hidden sm:flex">
                 <Plus className="h-4 w-4 mr-1" />
                 New Note
               </Button>
               
+              <Button variant="outline" size="sm" onClick={createNewNote} className="sm:hidden">
+                <Plus className="h-4 w-4" />
+              </Button>
+              
               {/* Custom URL Editor */}
               {isEditingUrl ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
                   <Input
                     value={customUrl}
                     onChange={(e) => setCustomUrl(e.target.value)}
                     onKeyDown={handleUrlKeyDown}
                     placeholder="Enter custom URL"
-                    className="w-40 h-8"
+                    className="h-8 text-sm min-w-0 flex-1"
                     autoFocus
                   />
-                  <Button variant="ghost" size="sm" onClick={handleCustomUrl}>
+                  <Button variant="ghost" size="sm" onClick={handleCustomUrl} className="shrink-0">
                     Go
                   </Button>
                 </div>
               ) : (
-                <Button variant="ghost" size="sm" onClick={handleCustomUrl}>
+                <Button variant="ghost" size="sm" onClick={handleCustomUrl} className="hidden sm:flex">
                   <Edit3 className="h-4 w-4 mr-1" />
                   Edit URL
                 </Button>
               )}
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
               {/* Save Status */}
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                 {saveStatus === 'saving' && <Save className="h-3 w-3 animate-spin" />}
                 {saveStatus === 'saved' && <Wifi className="h-3 w-3 text-green-500" />}
                 {saveStatus === 'error' && <WifiOff className="h-3 w-3 text-red-500" />}
-                <span>
+                <span className="hidden md:inline">
                   {saveStatus === 'saving' && 'Saving...'}
                   {saveStatus === 'saved' && `Saved ${formatLastSaved(lastSaved)}`}
                   {saveStatus === 'error' && 'Save failed'}
                 </span>
               </div>
               
+              {/* Mobile Save Status Icon Only */}
+              <div className="sm:hidden flex items-center">
+                {saveStatus === 'saving' && <Save className="h-4 w-4 animate-spin text-muted-foreground" />}
+                {saveStatus === 'saved' && <Wifi className="h-4 w-4 text-green-500" />}
+                {saveStatus === 'error' && <WifiOff className="h-4 w-4 text-red-500" />}
+              </div>
+              
               {/* Theme Toggle */}
-              <Button variant="ghost" size="sm" onClick={() => setIsDarkMode(!isDarkMode)}>
+              <Button variant="ghost" size="sm" onClick={() => setIsDarkMode(!isDarkMode)} className="shrink-0">
                 {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
               
               {/* Download Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-1" />
-                    Download
+                  <Button variant="outline" size="sm" className="shrink-0">
+                    <Download className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Download</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={downloadAsTxt}>
                     Download as TXT
                   </DropdownMenuItem>
@@ -642,16 +653,16 @@ export const NoteEditor = ({
               </DropdownMenu>
 
               {/* Copy URL */}
-              <Button variant="outline" size="sm" onClick={copyUrl}>
-                <Copy className="h-4 w-4 mr-1" />
-                Copy URL
+              <Button variant="outline" size="sm" onClick={copyUrl} className="shrink-0">
+                <Copy className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Copy URL</span>
               </Button>
 
               {/* Save Version */}
               {noteId && (
-                <Button variant="outline" size="sm" onClick={saveVersion}>
-                  <Save className="h-4 w-4 mr-1" />
-                  Save
+                <Button variant="outline" size="sm" onClick={saveVersion} className="shrink-0">
+                  <Save className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Save</span>
                 </Button>
               )}
 
@@ -668,22 +679,22 @@ export const NoteEditor = ({
         </div>
       </header>
 
-      <div className="container mx-auto max-w-4xl px-4 py-6">
+      <div className="container mx-auto max-w-4xl px-3 sm:px-4 py-4 sm:py-6">
         {/* Controls */}
-        <div className="mb-4 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4 flex-wrap">
+        <div className="mb-4 space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               {/* Mode Toggles */}
               <Button variant={isCodeMode ? "default" : "outline"} size="sm" onClick={() => {
                 setIsCodeMode(!isCodeMode);
                 if (!isCodeMode) setIsWysiwygMode(false);
-              }}>
+              }} className="flex-1 sm:flex-none">
                 {isCodeMode ? <Code2 className="h-3 w-3 mr-1" /> : <Type className="h-3 w-3 mr-1" />}
                 {isCodeMode ? 'Code Mode' : 'Text Mode'}
               </Button>
               
               {!isCodeMode && (
-                <Button variant={isWysiwygMode ? "default" : "outline"} size="sm" onClick={() => setIsWysiwygMode(!isWysiwygMode)}>
+                <Button variant={isWysiwygMode ? "default" : "outline"} size="sm" onClick={() => setIsWysiwygMode(!isWysiwygMode)} className="flex-1 sm:flex-none">
                   <Palette className="h-3 w-3 mr-1" />
                   {isWysiwygMode ? 'Rich Text' : 'Plain Text'}
                 </Button>
@@ -692,7 +703,7 @@ export const NoteEditor = ({
               
               {/* Language Selection */}
               {isCodeMode && <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-32 sm:w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -703,23 +714,26 @@ export const NoteEditor = ({
                 </Select>}
               
               {/* Line Numbers */}
-              {isCodeMode && <Button variant={showLineNumbers ? "default" : "outline"} size="sm" onClick={() => setShowLineNumbers(!showLineNumbers)}>
+              {isCodeMode && <Button variant={showLineNumbers ? "default" : "outline"} size="sm" onClick={() => setShowLineNumbers(!showLineNumbers)} className="flex-1 sm:flex-none">
                   <Hash className="h-3 w-3 mr-1" />
-                  Line Numbers
+                  <span className="hidden sm:inline">Line Numbers</span>
+                  <span className="sm:hidden">Lines</span>
                 </Button>}
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
               {/* Find & Replace */}
-              <Button variant="outline" size="sm" onClick={() => setFindReplaceOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => setFindReplaceOpen(true)} className="flex-1 sm:flex-none">
                 <Search className="h-3 w-3 mr-1" />
-                Find
+                <span className="hidden sm:inline">Find</span>
+                <span className="sm:hidden">Search</span>
               </Button>
 
               {/* Command Palette */}
-              <Button variant="outline" size="sm" onClick={() => setCommandPaletteOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => setCommandPaletteOpen(true)} className="flex-1 sm:flex-none">
                 <Command className="h-3 w-3 mr-1" />
-                Commands
+                <span className="hidden sm:inline">Commands</span>
+                <span className="sm:hidden">Cmd</span>
               </Button>
 
               {/* Password Protection */}
@@ -728,19 +742,21 @@ export const NoteEditor = ({
                   variant={isPasswordProtected ? "default" : "outline"} 
                   size="sm" 
                   onClick={togglePasswordProtection}
+                  className="flex-1 sm:flex-none"
                 >
                   <Lock className="h-3 w-3 mr-1" />
-                  {isPasswordProtected ? 'Protected' : 'Protect'}
+                  <span className="hidden sm:inline">{isPasswordProtected ? 'Protected' : 'Protect'}</span>
+                  <span className="sm:hidden">Lock</span>
                 </Button>
               )}
 
               {/* Font Size */}
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setFontSize([Math.max(12, fontSize[0] - 2)])} disabled={fontSize[0] <= 12}>
+              <div className="flex items-center gap-1 sm:gap-2 bg-muted/50 rounded-md p-1">
+                <Button variant="ghost" size="sm" onClick={() => setFontSize([Math.max(12, fontSize[0] - 2)])} disabled={fontSize[0] <= 12} className="h-8 w-8 p-0">
                   <ZoomOut className="h-3 w-3" />
                 </Button>
-                <span className="text-xs text-muted-foreground w-8 text-center">{fontSize[0]}px</span>
-                <Button variant="outline" size="sm" onClick={() => setFontSize([Math.min(24, fontSize[0] + 2)])} disabled={fontSize[0] >= 24}>
+                <span className="text-xs text-muted-foreground w-6 sm:w-8 text-center">{fontSize[0]}px</span>
+                <Button variant="ghost" size="sm" onClick={() => setFontSize([Math.min(24, fontSize[0] + 2)])} disabled={fontSize[0] >= 24} className="h-8 w-8 p-0">
                   <ZoomIn className="h-3 w-3" />
                 </Button>
               </div>
@@ -748,11 +764,11 @@ export const NoteEditor = ({
           </div>
           
           {/* Stats */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground overflow-x-auto">
             <span>{characterCount} characters</span>
             <span>{wordCount} words</span>
             <span>{lineCount} lines</span>
-            <span>Note ID: <span className="font-mono">{noteId}</span></span>
+            <span className="hidden sm:inline">Note ID: <span className="font-mono">{noteId}</span></span>
           </div>
         </div>
         
@@ -761,11 +777,11 @@ export const NoteEditor = ({
           {showLineNumbers && isCodeMode && (
             <div 
               ref={lineNumbersRef}
-              className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none overflow-hidden h-[calc(100vh-320px)]" 
+              className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-1 sm:px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none overflow-hidden h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)]" 
               style={{ fontSize: `${fontSize[0] * 0.8}px`, lineHeight: isCodeMode ? '1.5' : '1.6' }}
             >
               {content.split('\n').map((_, index) => (
-                <div key={index} className="text-right w-8">
+                <div key={index} className="text-right w-6 sm:w-8">
                   {index + 1}
                 </div>
               ))}
@@ -777,6 +793,7 @@ export const NoteEditor = ({
               onChange={setContent}
               fontSize={fontSize[0]}
               placeholder="Start typing your note..."
+              className="mobile-friendly"
             />
           ) : (
             <Textarea 
@@ -786,7 +803,7 @@ export const NoteEditor = ({
               onKeyDown={handleKeyDown} 
               onScroll={handleTextareaScroll}
               placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
-              className={`min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-12' : ''}`} 
+              className={`min-h-[calc(100vh-280px)] sm:min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-8 sm:pl-12' : ''}`} 
               style={{
                 fontSize: `${fontSize[0]}px`,
                 tabSize: 2,
@@ -797,11 +814,12 @@ export const NoteEditor = ({
         </div>
         
         {/* Footer */}
-        <div className="mt-6 space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="mt-4 sm:mt-6 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              Auto-saved • Share this URL to collaborate
+              <span className="hidden sm:inline">Auto-saved • Share this URL to collaborate</span>
+              <span className="sm:hidden">Auto-saved • Share URL</span>
             </div>
             <div className="flex items-center gap-1">
               {saveStatus === 'saved' && lastSaved && <>
