@@ -7,11 +7,10 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download, Search, Command, Folder } from 'lucide-react';
+import { Code2, Type, Plus, Home, Copy, Sun, Moon, ZoomIn, ZoomOut, Hash, Save, Wifi, WifiOff, Clock, Edit3, Download, Search, Command } from 'lucide-react';
 import { VersionHistory } from './VersionHistory';
 import { FindReplace } from './FindReplace';
 import { CommandPalette } from './CommandPalette';
-import { CollectionManager } from './CollectionManager';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import jsPDF from 'jspdf';
 
@@ -60,9 +59,6 @@ export const NoteEditor = ({
   const [customUrl, setCustomUrl] = useState('');
   const [findReplaceOpen, setFindReplaceOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [collectionManagerOpen, setCollectionManagerOpen] = useState(false);
-  const [currentCollection, setCurrentCollection] = useState<string | undefined>();
-  const [currentTags, setCurrentTags] = useState<string[]>([]);
   const [syntaxHighlightedContent, setSyntaxHighlightedContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
@@ -123,15 +119,13 @@ export const NoteEditor = ({
         const {
           data,
           error
-        } = await supabase.from('notes').select('content, current_version, updated_at, collection, tags').eq('id', noteId).maybeSingle();
+        } = await supabase.from('notes').select('content, current_version, updated_at').eq('id', noteId).maybeSingle();
         if (error && error.code !== 'PGRST116') {
           throw error;
         }
         if (data) {
           setContent(data.content || '');
           setLastSaved(new Date(data.updated_at));
-          setCurrentCollection(data.collection);
-          setCurrentTags(data.tags || []);
           
           // Create initial version if this note doesn't have any versions yet
           if (!data.current_version) {
@@ -579,14 +573,6 @@ export const NoteEditor = ({
                 Commands
               </Button>
 
-              {/* Collection Manager */}
-              {noteId && (
-                <Button variant="outline" size="sm" onClick={() => setCollectionManagerOpen(true)}>
-                  <Folder className="h-3 w-3 mr-1" />
-                  Organize
-                </Button>
-              )}
-
               {/* Font Size */}
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setFontSize([Math.max(12, fontSize[0] - 2)])} disabled={fontSize[0] <= 12}>
@@ -686,17 +672,5 @@ export const NoteEditor = ({
         isCodeMode={isCodeMode}
         currentNoteId={noteId}
       />
-
-      {noteId && (
-        <CollectionManager
-          open={collectionManagerOpen}
-          onOpenChange={setCollectionManagerOpen}
-          noteId={noteId}
-          currentCollection={currentCollection}
-          currentTags={currentTags}
-          onCollectionChange={setCurrentCollection}
-          onTagsChange={setCurrentTags}
-        />
-      )}
     </div>;
 };

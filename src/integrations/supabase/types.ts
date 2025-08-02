@@ -14,30 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      collections: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       note_versions: {
         Row: {
           change_summary: string | null
@@ -78,30 +54,24 @@ export type Database = {
       }
       notes: {
         Row: {
-          collection: string | null
           content: string | null
           created_at: string | null
           current_version: number | null
           id: string
-          tags: string[] | null
           updated_at: string | null
         }
         Insert: {
-          collection?: string | null
           content?: string | null
           created_at?: string | null
           current_version?: number | null
           id: string
-          tags?: string[] | null
           updated_at?: string | null
         }
         Update: {
-          collection?: string | null
           content?: string | null
           created_at?: string | null
           current_version?: number | null
           id?: string
-          tags?: string[] | null
           updated_at?: string | null
         }
         Relationships: []
