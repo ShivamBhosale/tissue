@@ -106,7 +106,7 @@ export const RichTextEditor = ({
   }, [fontSize]);
 
   return (
-    <div className={`rich-text-editor ${className}`}>
+    <div className={`rich-text-editor ${className}`} style={{ minHeight: '400px' }}>
       <style>{`
         .ql-toolbar {
           border-top: 1px solid hsl(var(--border));
