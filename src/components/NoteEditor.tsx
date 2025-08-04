@@ -52,7 +52,6 @@ export const NoteEditor = ({
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCodeMode, setIsCodeMode] = useState(false);
-  const [isWysiwygMode, setIsWysiwygMode] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('plaintext');
@@ -689,21 +688,11 @@ export const NoteEditor = ({
         <div className="mb-4 space-y-3 sm:space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-              {/* Mode Toggles */}
-              <Button variant={isCodeMode ? "default" : "outline"} size="sm" onClick={() => {
-                setIsCodeMode(!isCodeMode);
-                if (!isCodeMode) setIsWysiwygMode(false);
-              }} className="flex-1 sm:flex-none">
-                {isCodeMode ? <Code2 className="h-3 w-3 mr-1" /> : <Type className="h-3 w-3 mr-1" />}
-                {isCodeMode ? 'Code Mode' : 'Text Mode'}
+              {/* Mode Toggle */}
+              <Button variant={isCodeMode ? "default" : "outline"} size="sm" onClick={() => setIsCodeMode(!isCodeMode)} className="flex-1 sm:flex-none">
+                {isCodeMode ? <Code2 className="h-3 w-3 mr-1" /> : <Palette className="h-3 w-3 mr-1" />}
+                {isCodeMode ? 'Code Mode' : 'Rich Text'}
               </Button>
-              
-              {!isCodeMode && (
-                <Button variant={isWysiwygMode ? "default" : "outline"} size="sm" onClick={() => setIsWysiwygMode(!isWysiwygMode)} className="flex-1 sm:flex-none">
-                  <Palette className="h-3 w-3 mr-1" />
-                  {isWysiwygMode ? 'Rich Text' : 'Plain Text'}
-                </Button>
-              )}
               
               
               {/* Language Selection */}
@@ -792,28 +781,28 @@ export const NoteEditor = ({
               ))}
             </div>
           )}
-          {!isCodeMode && isWysiwygMode ? (
-            <RichTextEditor
-              value={content}
-              onChange={setContent}
-              fontSize={fontSize[0]}
-              placeholder="Start typing your note..."
-              className="mobile-friendly"
-            />
-          ) : (
+          {isCodeMode ? (
             <Textarea 
               ref={textareaRef} 
               value={content} 
               onChange={handleContentChange} 
               onKeyDown={handleKeyDown} 
               onScroll={handleTextareaScroll}
-              placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
-              className={`min-h-[calc(100vh-280px)] sm:min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-8 sm:pl-12' : ''}`} 
+              placeholder={`Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)`}
+              className={`min-h-[calc(100vh-280px)] sm:min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed font-mono whitespace-pre ${showLineNumbers ? 'pl-8 sm:pl-12' : ''}`} 
               style={{
                 fontSize: `${fontSize[0]}px`,
                 tabSize: 2,
-                lineHeight: isCodeMode ? '1.5' : '1.6'
+                lineHeight: '1.5'
               }} 
+            />
+          ) : (
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              fontSize={fontSize[0]}
+              placeholder="Start typing your note..."
+              className="mobile-friendly"
             />
           )}
         </div>
