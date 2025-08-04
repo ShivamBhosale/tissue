@@ -577,13 +577,9 @@ export const NoteEditor = ({
               {/* Save Status */}
               <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                 {saveStatus === 'saving' && <Save className="h-3 w-3 animate-spin" />}
-                {saveStatus === 'saved' && <Wifi className="h-3 w-3 text-green-500" />}
+                {saveStatus === 'saved'}
                 {saveStatus === 'error' && <WifiOff className="h-3 w-3 text-red-500" />}
-                <span className="hidden md:inline">
-                  {saveStatus === 'saving' && 'Saving...'}
-                  {saveStatus === 'saved' && `Saved ${formatLastSaved(lastSaved)}`}
-                  {saveStatus === 'error' && 'Save failed'}
-                </span>
+                
               </div>
               
               {/* Mobile Save Status Icon Only */}
