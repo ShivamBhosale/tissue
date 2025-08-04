@@ -32,7 +32,6 @@ import 'prismjs/components/prism-java';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-markdown';
-
 interface NoteEditorProps {
   noteId?: string;
 }
@@ -139,27 +138,22 @@ export const NoteEditor = ({
             setPasswordDialogOpen(true);
             return; // Don't load content until password is verified
           }
-          
           setContent(data.content || '');
           setLastSaved(new Date(data.updated_at));
           setIsPasswordProtected(!!data.password_hash);
           setIsUnlocked(!data.password_hash);
-          
+
           // Create initial version if this note doesn't have any versions yet
           if (!data.current_version) {
-            await supabase
-              .from('notes')
-              .update({ current_version: 1 })
-              .eq('id', noteId);
-              
-            await supabase
-              .from('note_versions')
-              .insert({ 
-                note_id: noteId, 
-                content: data.content || '', 
-                version_number: 1,
-                content_hash: 'd41d8cd98f00b204e9800998ecf8427e'
-              });
+            await supabase.from('notes').update({
+              current_version: 1
+            }).eq('id', noteId);
+            await supabase.from('note_versions').insert({
+              note_id: noteId,
+              content: data.content || '',
+              version_number: 1,
+              content_hash: 'd41d8cd98f00b204e9800998ecf8427e'
+            });
           }
         } else {
           // Create new note
@@ -173,17 +167,14 @@ export const NoteEditor = ({
           if (insertError) {
             throw insertError;
           }
-          
+
           // Create initial version
-          await supabase
-            .from('note_versions')
-            .insert({ 
-              note_id: noteId, 
-              content: '', 
-              version_number: 1,
-              content_hash: 'd41d8cd98f00b204e9800998ecf8427e'
-            });
-            
+          await supabase.from('note_versions').insert({
+            note_id: noteId,
+            content: '',
+            version_number: 1,
+            content_hash: 'd41d8cd98f00b204e9800998ecf8427e'
+          });
           setContent('');
           setLastSaved(new Date());
         }
@@ -210,7 +201,6 @@ export const NoteEditor = ({
       try {
         // Only show saving status for longer operations to reduce UI flicker
         const savingTimeout = setTimeout(() => setSaveStatus('saving'), 100);
-        
         const {
           error
         } = await supabase.from('notes').upsert([{
@@ -219,9 +209,7 @@ export const NoteEditor = ({
         }], {
           onConflict: 'id'
         });
-        
         clearTimeout(savingTimeout);
-        
         if (error) {
           throw error;
         }
@@ -259,25 +247,27 @@ export const NoteEditor = ({
           supabase.rpc('manual_create_note_version', {
             note_id_param: noteId,
             content_param: content
-          }).then(({ data, error }) => {
+          }).then(({
+            data,
+            error
+          }) => {
             if (error) {
               console.error('Error saving version:', error);
               toast({
                 title: "Error",
                 description: "Failed to save version",
-                variant: "destructive",
+                variant: "destructive"
               });
             } else {
               toast({
                 title: "Version Saved!",
-                description: `Saved as version ${data}`,
+                description: `Saved as version ${data}`
               });
             }
           });
         }
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [noteId, content, toast]);
@@ -301,7 +291,6 @@ export const NoteEditor = ({
       lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
     }
   };
-
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
   };
@@ -324,12 +313,10 @@ export const NoteEditor = ({
       }, 0);
     }
   };
-
   const createNewNote = () => {
     const newId = generateNoteId();
     navigate(`/${newId}`);
   };
-
   const handleCustomUrl = () => {
     if (isEditingUrl && customUrl.trim()) {
       const cleanUrl = customUrl.trim().replace(/[^a-zA-Z0-9-_]/g, '');
@@ -343,7 +330,6 @@ export const NoteEditor = ({
       setCustomUrl(noteId || '');
     }
   };
-
   const handleUrlKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleCustomUrl();
@@ -352,28 +338,27 @@ export const NoteEditor = ({
       setCustomUrl('');
     }
   };
-
   const saveVersion = async () => {
     if (!noteId) return;
-    
     try {
-      const { data, error } = await supabase.rpc('manual_create_note_version', {
+      const {
+        data,
+        error
+      } = await supabase.rpc('manual_create_note_version', {
         note_id_param: noteId,
         content_param: content
       });
-
       if (error) throw error;
-
       toast({
         title: "Version Saved!",
-        description: `Saved as version ${data}`,
+        description: `Saved as version ${data}`
       });
     } catch (error) {
       console.error('Error saving version:', error);
       toast({
         title: "Error",
         description: "Failed to save version",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -405,7 +390,9 @@ export const NoteEditor = ({
   // Download functions
   const downloadAsTxt = () => {
     const element = document.createElement('a');
-    const file = new Blob([content], { type: 'text/plain' });
+    const file = new Blob([content], {
+      type: 'text/plain'
+    });
     element.href = URL.createObjectURL(file);
     element.download = `note-${noteId || 'untitled'}.txt`;
     document.body.appendChild(element);
@@ -416,23 +403,20 @@ export const NoteEditor = ({
       description: 'Note downloaded as TXT file'
     });
   };
-
   const downloadAsPdf = () => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 20;
     const maxWidth = pageWidth - margin * 2;
-    
+
     // Set font
     pdf.setFontSize(12);
-    
+
     // Split content into lines that fit the page width
     const lines = pdf.splitTextToSize(content || 'Empty note', maxWidth);
-    
     let y = margin;
     const lineHeight = 7;
-    
     for (let i = 0; i < lines.length; i++) {
       if (y + lineHeight > pageHeight - margin) {
         pdf.addPage();
@@ -441,7 +425,6 @@ export const NoteEditor = ({
       pdf.text(lines[i], margin, y);
       y += lineHeight;
     }
-    
     pdf.save(`note-${noteId || 'untitled'}.pdf`);
     toast({
       title: 'Downloaded!',
@@ -452,15 +435,14 @@ export const NoteEditor = ({
   // Password protection functions
   const handlePasswordSet = async (hashedPassword: string) => {
     if (!noteId) return;
-    
     try {
-      const { error } = await supabase
-        .from('notes')
-        .update({ password_hash: hashedPassword, is_encrypted: true })
-        .eq('id', noteId);
-        
+      const {
+        error
+      } = await supabase.from('notes').update({
+        password_hash: hashedPassword,
+        is_encrypted: true
+      }).eq('id', noteId);
       if (error) throw error;
-      
       setIsPasswordProtected(true);
       setIsUnlocked(true);
     } catch (error) {
@@ -468,40 +450,35 @@ export const NoteEditor = ({
       toast({
         title: "Error",
         description: "Failed to set password protection",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handlePasswordVerified = async (password: string) => {
     if (!noteId) return;
-    
     try {
       // Get the stored password hash
-      const { data, error } = await supabase
-        .from('notes')
-        .select('password_hash, content, updated_at')
-        .eq('id', noteId)
-        .single();
-        
+      const {
+        data,
+        error
+      } = await supabase.from('notes').select('password_hash, content, updated_at').eq('id', noteId).single();
       if (error) throw error;
-      
+
       // Verify password
       const isValid = await bcrypt.compare(password, data.password_hash);
-      
       if (isValid) {
         setIsUnlocked(true);
         setContent(data.content || '');
         setLastSaved(new Date(data.updated_at));
         toast({
           title: "Access Granted",
-          description: "Note unlocked successfully",
+          description: "Note unlocked successfully"
         });
       } else {
         toast({
           title: "Access Denied",
           description: "Incorrect password",
-          variant: "destructive",
+          variant: "destructive"
         });
         setPasswordDialogOpen(true); // Keep dialog open
       }
@@ -510,40 +487,39 @@ export const NoteEditor = ({
       toast({
         title: "Error",
         description: "Failed to verify password",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const togglePasswordProtection = () => {
     if (isPasswordProtected) {
       // Remove password protection
-      supabase
-        .from('notes')
-        .update({ password_hash: null, is_encrypted: false })
-        .eq('id', noteId)
-        .then(({ error }) => {
-          if (error) {
-            toast({
-              title: "Error",
-              description: "Failed to remove password protection",
-              variant: "destructive",
-            });
-          } else {
-            setIsPasswordProtected(false);
-            setIsUnlocked(true);
-            toast({
-              title: "Password Removed",
-              description: "Note is no longer password protected",
-            });
-          }
-        });
+      supabase.from('notes').update({
+        password_hash: null,
+        is_encrypted: false
+      }).eq('id', noteId).then(({
+        error
+      }) => {
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to remove password protection",
+            variant: "destructive"
+          });
+        } else {
+          setIsPasswordProtected(false);
+          setIsUnlocked(true);
+          toast({
+            title: "Password Removed",
+            description: "Note is no longer password protected"
+          });
+        }
+      });
     } else {
       setPasswordMode('set');
       setPasswordDialogOpen(true);
     }
   };
-
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading...</div>
@@ -565,13 +541,7 @@ export const NoteEditor = ({
           </Button>
         </div>
         
-        <PasswordProtection
-          isOpen={passwordDialogOpen}
-          onClose={() => setPasswordDialogOpen(false)}
-          onPasswordVerified={handlePasswordVerified}
-          mode="verify"
-          title="Enter Note Password"
-        />
+        <PasswordProtection isOpen={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)} onPasswordVerified={handlePasswordVerified} mode="verify" title="Enter Note Password" />
       </div>;
   }
   return <div className="min-h-screen bg-background">
@@ -592,26 +562,15 @@ export const NoteEditor = ({
               </Button>
               
               {/* Custom URL Editor */}
-              {isEditingUrl ? (
-                <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
-                  <Input
-                    value={customUrl}
-                    onChange={(e) => setCustomUrl(e.target.value)}
-                    onKeyDown={handleUrlKeyDown}
-                    placeholder="Enter custom URL"
-                    className="h-8 text-sm min-w-0 flex-1"
-                    autoFocus
-                  />
+              {isEditingUrl ? <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+                  <Input value={customUrl} onChange={e => setCustomUrl(e.target.value)} onKeyDown={handleUrlKeyDown} placeholder="Enter custom URL" className="h-8 text-sm min-w-0 flex-1" autoFocus />
                   <Button variant="ghost" size="sm" onClick={handleCustomUrl} className="shrink-0">
                     Go
                   </Button>
-                </div>
-              ) : (
-                <Button variant="ghost" size="sm" onClick={handleCustomUrl} className="hidden sm:flex">
+                </div> : <Button variant="ghost" size="sm" onClick={handleCustomUrl} className="hidden sm:flex">
                   <Edit3 className="h-4 w-4 mr-1" />
                   Edit URL
-                </Button>
-              )}
+                </Button>}
             </div>
             
             <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
@@ -664,21 +623,13 @@ export const NoteEditor = ({
               </Button>
 
               {/* Save Version */}
-              {noteId && (
-                <Button variant="outline" size="sm" onClick={saveVersion} className="shrink-0">
+              {noteId && <Button variant="outline" size="sm" onClick={saveVersion} className="shrink-0">
                   <Save className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Save</span>
-                </Button>
-              )}
+                </Button>}
 
               {/* Version History */}
-              {noteId && (
-                <VersionHistory 
-                  noteId={noteId} 
-                  currentContent={content}
-                  onRestoreVersion={(restoredContent) => setContent(restoredContent)}
-                />
-              )}
+              {noteId && <VersionHistory noteId={noteId} currentContent={content} onRestoreVersion={restoredContent => setContent(restoredContent)} />}
             </div>
           </div>
         </div>
@@ -691,19 +642,17 @@ export const NoteEditor = ({
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               {/* Mode Toggles */}
               <Button variant={isCodeMode ? "default" : "outline"} size="sm" onClick={() => {
-                setIsCodeMode(!isCodeMode);
-                if (!isCodeMode) setIsWysiwygMode(false);
-              }} className="flex-1 sm:flex-none">
+              setIsCodeMode(!isCodeMode);
+              if (!isCodeMode) setIsWysiwygMode(false);
+            }} className="flex-1 sm:flex-none">
                 {isCodeMode ? <Code2 className="h-3 w-3 mr-1" /> : <Type className="h-3 w-3 mr-1" />}
                 {isCodeMode ? 'Code Mode' : 'Text Mode'}
               </Button>
               
-              {!isCodeMode && (
-                <Button variant={isWysiwygMode ? "default" : "outline"} size="sm" onClick={() => setIsWysiwygMode(!isWysiwygMode)} className="flex-1 sm:flex-none">
+              {!isCodeMode && <Button variant={isWysiwygMode ? "default" : "outline"} size="sm" onClick={() => setIsWysiwygMode(!isWysiwygMode)} className="flex-1 sm:flex-none">
                   <Palette className="h-3 w-3 mr-1" />
                   {isWysiwygMode ? 'Rich Text' : 'Plain Text'}
-                </Button>
-              )}
+                </Button>}
               
               
               {/* Language Selection */}
@@ -742,18 +691,11 @@ export const NoteEditor = ({
               </Button>
 
               {/* Password Protection */}
-              {noteId && (
-                <Button 
-                  variant={isPasswordProtected ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={togglePasswordProtection}
-                  className="flex-1 sm:flex-none"
-                >
+              {noteId && <Button variant={isPasswordProtected ? "default" : "outline"} size="sm" onClick={togglePasswordProtection} className="flex-1 sm:flex-none">
                   <Lock className="h-3 w-3 mr-1" />
                   <span className="hidden sm:inline">{isPasswordProtected ? 'Protected' : 'Protect'}</span>
                   <span className="sm:hidden">Lock</span>
-                </Button>
-              )}
+                </Button>}
 
               {/* Font Size */}
               <div className="flex items-center gap-1 sm:gap-2 bg-muted/50 rounded-md p-1">
@@ -779,43 +721,19 @@ export const NoteEditor = ({
         
         {/* Editor */}
         <div className="relative rounded-md border shadow-sm">
-          {showLineNumbers && isCodeMode && (
-            <div 
-              ref={lineNumbersRef}
-              className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-1 sm:px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none overflow-hidden h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)]" 
-              style={{ fontSize: `${fontSize[0] * 0.8}px`, lineHeight: isCodeMode ? '1.5' : '1.6' }}
-            >
-              {content.split('\n').map((_, index) => (
-                <div key={index} className="text-right w-6 sm:w-8">
+          {showLineNumbers && isCodeMode && <div ref={lineNumbersRef} className="absolute left-0 top-0 z-10 bg-muted/30 border-r border-border px-1 sm:px-2 py-3 font-mono text-xs text-muted-foreground select-none pointer-events-none overflow-hidden h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)]" style={{
+          fontSize: `${fontSize[0] * 0.8}px`,
+          lineHeight: isCodeMode ? '1.5' : '1.6'
+        }}>
+              {content.split('\n').map((_, index) => <div key={index} className="text-right w-6 sm:w-8">
                   {index + 1}
-                </div>
-              ))}
-            </div>
-          )}
-          {!isCodeMode && isWysiwygMode ? (
-            <RichTextEditor
-              value={content}
-              onChange={setContent}
-              fontSize={fontSize[0]}
-              placeholder="Start typing your note..."
-              className="mobile-friendly"
-            />
-          ) : (
-            <Textarea 
-              ref={textareaRef} 
-              value={content} 
-              onChange={handleContentChange} 
-              onKeyDown={handleKeyDown} 
-              onScroll={handleTextareaScroll}
-              placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} 
-              className={`min-h-[calc(100vh-280px)] sm:min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-8 sm:pl-12' : ''}`} 
-              style={{
-                fontSize: `${fontSize[0]}px`,
-                tabSize: 2,
-                lineHeight: isCodeMode ? '1.5' : '1.6'
-              }} 
-            />
-          )}
+                </div>)}
+            </div>}
+          {!isCodeMode && isWysiwygMode ? <RichTextEditor value={content} onChange={setContent} fontSize={fontSize[0]} placeholder="Start typing your note..." className="mobile-friendly" /> : <Textarea ref={textareaRef} value={content} onChange={handleContentChange} onKeyDown={handleKeyDown} onScroll={handleTextareaScroll} placeholder={isCodeMode ? `Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)` : "Start typing your note..."} className={`min-h-[calc(100vh-280px)] sm:min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed ${isCodeMode ? 'font-mono whitespace-pre' : ''} ${showLineNumbers && isCodeMode ? 'pl-8 sm:pl-12' : ''}`} style={{
+          fontSize: `${fontSize[0]}px`,
+          tabSize: 2,
+          lineHeight: isCodeMode ? '1.5' : '1.6'
+        }} />}
         </div>
         
         {/* Footer */}
@@ -843,36 +761,11 @@ export const NoteEditor = ({
       </div>
 
       {/* Dialogs */}
-      <FindReplace
-        open={findReplaceOpen}
-        onOpenChange={setFindReplaceOpen}
-        content={content}
-        onContentChange={setContent}
-        textareaRef={textareaRef}
-      />
+      <FindReplace open={findReplaceOpen} onOpenChange={setFindReplaceOpen} content={content} onContentChange={setContent} textareaRef={textareaRef} />
 
-      <CommandPalette
-        open={commandPaletteOpen}
-        onOpenChange={setCommandPaletteOpen}
-        onNewNote={createNewNote}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
-        onToggleCodeMode={() => setIsCodeMode(!isCodeMode)}
-        onOpenFindReplace={() => setFindReplaceOpen(true)}
-        onCopyUrl={copyUrl}
-        onSaveVersion={saveVersion}
-        onDownloadTxt={downloadAsTxt}
-        onDownloadPdf={downloadAsPdf}
-        isCodeMode={isCodeMode}
-        currentNoteId={noteId}
-      />
+      <CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} onNewNote={createNewNote} onToggleTheme={() => setIsDarkMode(!isDarkMode)} onToggleCodeMode={() => setIsCodeMode(!isCodeMode)} onOpenFindReplace={() => setFindReplaceOpen(true)} onCopyUrl={copyUrl} onSaveVersion={saveVersion} onDownloadTxt={downloadAsTxt} onDownloadPdf={downloadAsPdf} isCodeMode={isCodeMode} currentNoteId={noteId} />
 
       {/* Password Protection Dialog */}
-      <PasswordProtection
-        isOpen={passwordDialogOpen}
-        onClose={() => setPasswordDialogOpen(false)}
-        onPasswordSet={handlePasswordSet}
-        onPasswordVerified={handlePasswordVerified}
-        mode={passwordMode}
-      />
+      <PasswordProtection isOpen={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)} onPasswordSet={handlePasswordSet} onPasswordVerified={handlePasswordVerified} mode={passwordMode} />
     </div>;
 };
