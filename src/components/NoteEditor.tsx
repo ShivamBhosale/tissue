@@ -578,15 +578,15 @@ export const NoteEditor = ({
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto max-w-4xl px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <h1 className="text-lg sm:text-xl font-bold shrink-0">Tissue</h1>
               
-              <Button variant="outline" size="sm" onClick={createNewNote} className="hidden sm:flex">
+              <Button variant="outline" size="sm" onClick={createNewNote} className="hidden sm:flex shrink-0">
                 <Plus className="h-4 w-4 mr-1" />
                 New Note
               </Button>
               
-              <Button variant="outline" size="sm" onClick={createNewNote} className="sm:hidden">
+              <Button variant="outline" size="sm" onClick={createNewNote} className="sm:hidden shrink-0">
                 <Plus className="h-4 w-4" />
               </Button>
               
@@ -606,20 +606,20 @@ export const NoteEditor = ({
                   </Button>
                 </div>
               ) : (
-                <Button variant="ghost" size="sm" onClick={handleCustomUrl} className="hidden sm:flex">
+                <Button variant="ghost" size="sm" onClick={handleCustomUrl} className="hidden sm:flex shrink-0">
                   <Edit3 className="h-4 w-4 mr-1" />
                   Edit URL
                 </Button>
               )}
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {/* Save Status */}
               <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                 {saveStatus === 'saving' && <Save className="h-3 w-3 animate-spin" />}
                 {saveStatus === 'saved' && <Wifi className="h-3 w-3 text-green-500" />}
                 {saveStatus === 'error' && <WifiOff className="h-3 w-3 text-red-500" />}
-                <span className="hidden md:inline">
+                <span className="hidden md:inline whitespace-nowrap">
                   {saveStatus === 'saving' && 'Saving...'}
                   {saveStatus === 'saved' && `Saved ${formatLastSaved(lastSaved)}`}
                   {saveStatus === 'error' && 'Save failed'}
@@ -632,7 +632,7 @@ export const NoteEditor = ({
                 {saveStatus === 'saved' && <Wifi className="h-4 w-4 text-green-500" />}
                 {saveStatus === 'error' && <WifiOff className="h-4 w-4 text-red-500" />}
               </div>
-              
+               
               {/* Theme Toggle */}
               <Button variant="ghost" size="sm" onClick={() => setIsDarkMode(!isDarkMode)} className="shrink-0">
                 {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
