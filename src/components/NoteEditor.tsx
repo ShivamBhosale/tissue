@@ -208,7 +208,9 @@ export const NoteEditor = ({
     if (!noteId || isLoading) return;
     const saveNote = async () => {
       try {
-        setSaveStatus('saving');
+        // Only show saving status for longer operations to reduce UI flicker
+        const savingTimeout = setTimeout(() => setSaveStatus('saving'), 100);
+        
         const {
           error
         } = await supabase.from('notes').upsert([{
@@ -217,6 +219,9 @@ export const NoteEditor = ({
         }], {
           onConflict: 'id'
         });
+        
+        clearTimeout(savingTimeout);
+        
         if (error) {
           throw error;
         }
@@ -227,7 +232,7 @@ export const NoteEditor = ({
         setSaveStatus('error');
       }
     };
-    const debounceTimer = setTimeout(saveNote, 500);
+    const debounceTimer = setTimeout(saveNote, 1000); // Increased debounce to reduce frequency
     return () => clearTimeout(debounceTimer);
   }, [content, noteId, isLoading]);
 
