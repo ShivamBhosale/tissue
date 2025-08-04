@@ -754,7 +754,7 @@ export const NoteEditor = ({
           {/* Signature */}
           <div className="pt-4 border-t border-border/40">
             <div className="text-xs text-muted-foreground/70 italic text-center">
-              Made with ❤️ by <span className="font-medium">Shivam Bhosale</span>
+              Made by <span className="font-medium">LogicLynx</span>
             </div>
           </div>
         </div>
