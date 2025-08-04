@@ -711,11 +711,31 @@ export const NoteEditor = ({
                   {index + 1}
                 </div>)}
             </div>}
-          {isCodeMode ? <Textarea ref={textareaRef} value={content} onChange={handleContentChange} onKeyDown={handleKeyDown} onScroll={handleTextareaScroll} placeholder={`Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)`} className={`min-h-[calc(100vh-280px)] sm:min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed font-mono whitespace-pre ${showLineNumbers ? 'pl-8 sm:pl-12' : ''}`} style={{
-          fontSize: `${fontSize[0]}px`,
-          tabSize: 2,
-          lineHeight: '1.5'
-        }} /> : <RichTextEditor value={content} onChange={setContent} fontSize={fontSize[0]} placeholder="Start typing your note..." className="mobile-friendly" />}
+          {isCodeMode ? (
+            <Textarea 
+              ref={textareaRef} 
+              value={content} 
+              onChange={handleContentChange} 
+              onKeyDown={handleKeyDown} 
+              onScroll={handleTextareaScroll} 
+              placeholder={`Start typing your ${selectedLanguage} code... (Tab key inserts tab characters)`} 
+              className={`min-h-[calc(100vh-280px)] sm:min-h-[calc(100vh-320px)] resize-none border-0 shadow-none focus-visible:ring-1 leading-relaxed font-mono whitespace-pre ${showLineNumbers ? 'pl-8 sm:pl-12' : ''}`} 
+              style={{
+                fontSize: `${fontSize[0]}px`,
+                tabSize: 2,
+                lineHeight: '1.5'
+              }} 
+            />
+          ) : (
+            <RichTextEditor 
+              key={noteId} 
+              value={content} 
+              onChange={setContent} 
+              fontSize={fontSize[0]} 
+              placeholder="Start typing your note..." 
+              className="mobile-friendly" 
+            />
+          )}
         </div>
         
         {/* Footer */}
