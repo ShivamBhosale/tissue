@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 interface RichTextEditorProps {
   value: string;
@@ -20,55 +18,6 @@ export const RichTextEditor = ({
   className = ""
 }: RichTextEditorProps) => {
   const quillRef = useRef<ReactQuill>(null);
-  const { toast } = useToast();
-
-  // Image upload handler
-  const uploadImage = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      
-      const { data, error } = await supabase.storage
-        .from('note-images')
-        .upload(fileName, file);
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('note-images')
-        .getPublicUrl(data.path);
-
-      return publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Upload Failed",
-        description: "Failed to upload image. Please try again.",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  // Custom image handler for Quill
-  const imageHandler = () => {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) {
-        const imageUrl = await uploadImage(file);
-        if (imageUrl && quillRef.current) {
-          const quill = quillRef.current.getEditor();
-          const range = quill.getSelection();
-          quill.insertEmbed(range?.index || 0, 'image', imageUrl);
-        }
-      }
-    };
-  };
 
   // Custom toolbar configuration
   const modules = {
@@ -83,10 +32,7 @@ export const RichTextEditor = ({
         ['link', 'image'],
         ['blockquote', 'code-block'],
         ['clean']
-      ],
-      handlers: {
-        image: imageHandler
-      }
+      ]
     }
   };
 
@@ -106,7 +52,7 @@ export const RichTextEditor = ({
   }, [fontSize]);
 
   return (
-    <div className={`rich-text-editor ${className}`} style={{ minHeight: '400px' }}>
+    <div className={`rich-text-editor ${className}`}>
       <style>{`
         .ql-toolbar {
           border-top: 1px solid hsl(var(--border));
