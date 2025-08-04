@@ -196,10 +196,11 @@ export const NoteEditor = ({
   // Auto-save functionality
   useEffect(() => {
     if (!noteId || isLoading) return;
+    
     const saveNote = async () => {
       try {
-        // Only show saving status for longer operations to reduce UI flicker
-        const savingTimeout = setTimeout(() => setSaveStatus('saving'), 100);
+        console.log('Auto-saving note...', { noteId, contentLength: content.length });
+        
         const {
           error
         } = await supabase.from('notes').upsert([{
@@ -208,18 +209,22 @@ export const NoteEditor = ({
         }], {
           onConflict: 'id'
         });
-        clearTimeout(savingTimeout);
+        
         if (error) {
           throw error;
         }
-        setSaveStatus('saved');
+        
+        console.log('Auto-save completed successfully');
+        // Use callback form to prevent unnecessary re-renders
+        setSaveStatus(prev => prev !== 'saved' ? 'saved' : prev);
         setLastSaved(new Date());
       } catch (error) {
         console.error('Error saving note:', error);
         setSaveStatus('error');
       }
     };
-    const debounceTimer = setTimeout(saveNote, 1000); // Increased debounce to reduce frequency
+    
+    const debounceTimer = setTimeout(saveNote, 1000);
     return () => clearTimeout(debounceTimer);
   }, [content, noteId, isLoading]);
 
@@ -728,7 +733,6 @@ export const NoteEditor = ({
             />
           ) : (
             <RichTextEditor 
-              key={noteId} 
               value={content} 
               onChange={setContent} 
               fontSize={fontSize[0]} 
